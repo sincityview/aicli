@@ -16,14 +16,22 @@ v0.1
 go init aicli
 go mod tidy
 go build -o aicli cmd/aicli/main.go
+```
 
+```text
 sudo cp aicli /usr/local/bin/
+```
 
+```text
 mkdir -p path/to/project
 aicli --init
+```
 
+```text
 nano .aicli/config.yaml
+```
 
+```text
 aicli
 ```
 
