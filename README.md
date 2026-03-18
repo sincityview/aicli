@@ -35,6 +35,8 @@ nano .aicli/config.yaml
 aicli
 ```
 
+**Проект**
+
 - READY
   - Подключается к LocalAI
   - Смотри /help
