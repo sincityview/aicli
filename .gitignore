@@ -1,3 +1,4 @@
 .aicli/
 aicli
-go.*
+go.mod
+go.sum
