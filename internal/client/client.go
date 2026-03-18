@@ -15,7 +15,7 @@ import (
 	"aicli/internal/ui"
 )
 
-// Call отправляет запрос к LocalAI/OpenAI-совместимому серверу
+// Call отправляет запрос к LocalAI/OpenAI-совместимому серверу с streaming-ответом
 func Call(messages []types.Message, model string) (string, error) {
 	url := config.Host() + "/v1/chat/completions"
 
@@ -27,24 +27,34 @@ func Call(messages []types.Message, model string) (string, error) {
 		"top_p":       0.9,
 	}
 
-	data, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	req.Header.Set("Content-Type", "application/json")
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal payload: %w", err)
+	}
 
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
 	if key := config.APIKey(); key != "" {
 		req.Header.Set("Authorization", "Bearer "+key)
 	}
 
+	// Запускаем спиннер
 	stopSpinner := ui.StartSpinner()
-	defer stopSpinner()
+	defer stopSpinner() // безопасно благодаря sync.Once
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		stopSpinner()
 		return "", fmt.Errorf("network error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		stopSpinner()
 		body, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 	}
@@ -61,6 +71,7 @@ func Call(messages []types.Message, model string) (string, error) {
 			}
 			break
 		}
+
 		line = strings.TrimSpace(line)
 		if line == "" || line == "data: [DONE]" {
 			continue
@@ -71,32 +82,39 @@ func Call(messages []types.Message, model string) (string, error) {
 
 		data := strings.TrimPrefix(line, "data: ")
 		var chunk types.ChatCompletionChunk
-		if json.Unmarshal([]byte(data), &chunk) != nil {
+		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
 			continue
 		}
 
 		if len(chunk.Choices) == 0 {
 			continue
 		}
+
 		content := chunk.Choices[0].Delta.Content
 		if content == "" {
 			continue
 		}
 
+		// Первый чанк — останавливаем спиннер и выводим заголовок модели
 		if firstChunk {
 			stopSpinner()
-			fmt.Printf("%s%s%s\n %s↳ %s", ui.ColorRed+ui.ColorBold, model, ui.ColorReset, ui.ColorCyan, ui.ColorReset)
+			fmt.Printf("%s%s%s\n %s↳ %s",
+				ui.ColorRed+ui.ColorBold, model, ui.ColorReset,
+				ui.ColorCyan, ui.ColorReset)
 			firstChunk = false
 		}
 
 		fmt.Print(content)
 		sb.WriteString(content)
 	}
-	fmt.Println()
+
+	fmt.Println() // новая строка после ответа
 
 	if firstChunk {
-		return "", fmt.Errorf("empty response from server")
+		stopSpinner()
+		return "", fmt.Errorf("server returned empty response")
 	}
+
 	return sb.String(), nil
 }
 
