@@ -11,10 +11,20 @@ v0.1
 1.25
 ```
 
-**Компиляция и запуск**
+**Компиляция, настройка и запуск**
 ```text
 go init aicli
 go mod tidy
+go build -o aicli cmd/aicli/main.go
+
+sudo cp aicli /usr/local/bin/
+
+mkdir -p path/to/project
+aicli --init
+
+nano .aicli/config.yaml
+
+aicli
 ```
 
 - READY
