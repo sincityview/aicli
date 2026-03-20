@@ -3,7 +3,7 @@
 
 **Версия App**
 ```text
-v0.1
+v0.2
 ```
 
 **Версия Go**
@@ -22,16 +22,19 @@ go build -o aicli cmd/aicli/main.go
 sudo cp aicli /usr/local/bin/
 ```
 
+**Создание локального проекта**
 ```text
 mkdir -p path/to/project
 aicli --version
 aicli --init
 ```
 
+**Настройки провайдера и модели**
 ```text
 nano .aicli/config.yaml
 ```
 
+**Запуск**
 ```text
 aicli
 ```
