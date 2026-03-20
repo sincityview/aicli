@@ -2,6 +2,7 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,7 +48,6 @@ func Load(name string) ([]types.Message, error) {
 	if err != nil {
 		return []types.Message{{Role: "system", Content: config.SystemPrompt()}}, nil
 	}
-
 	var history []types.Message
 	if err := json.Unmarshal(data, &history); err != nil {
 		return nil, err
@@ -68,5 +68,9 @@ func List() ([]string, error) {
 }
 
 func Delete(name string) error {
-	return os.Remove(Path(name))
+	path := Path(name)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("чат '%s' не найден", name)
+	}
+	return os.Remove(path)
 }

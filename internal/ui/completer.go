@@ -1,20 +1,30 @@
 package ui
 
-import "strings"
+import (
+	"strings"
+	"sync"
+)
 
 type Completer struct{}
 
-func (c Completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
-	str := string(line[:pos])
-	commands := []string{
-		"/help", "/list", "/new", "/clear", "/models", "/exit",
-		"/model ", "/open ", "/delete ", "/rename ", "/read ", "/save ",
-	}
+var (
+	modelCache      []string
+	modelCacheMutex sync.RWMutex
+)
 
-	for _, cmd := range commands {
+func (c Completer) Do(line []rune, pos int) ([][]rune, int) {
+	str := string(line[:pos])
+
+	// Статические команды
+	static := []string{
+		"/help ", "/status ", "/model ", "/provider ",
+		"/chat ", "/clear ", "/read ", "/save ", "/exit ",
+	}
+	for _, cmd := range static {
 		if strings.HasPrefix(cmd, str) {
-			newLine = append(newLine, []rune(strings.TrimPrefix(cmd, str)))
+			return [][]rune{[]rune(strings.TrimPrefix(cmd, str))}, len(line)
 		}
 	}
-	return newLine, len(line)
+
+	return nil, len(line)
 }

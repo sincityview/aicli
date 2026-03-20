@@ -24,6 +24,7 @@ sudo cp aicli /usr/local/bin/
 
 ```text
 mkdir -p path/to/project
+aicli --version
 aicli --init
 ```
 
@@ -35,9 +36,15 @@ nano .aicli/config.yaml
 aicli
 ```
 
+### TODO
+------
+
 - READY
-  - Подключается к LocalAI
+  - Подключается к LocalAI и Ollama
   - Смотри /help
 
 - TODO
+  - Сохранение провайдера
+  - Автовыбор модели если не указана
+  - Добавить pwd в /status
   - ⊂(◉‿◉)つ

@@ -1,41 +1,34 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 )
 
-const (
-	DefaultHost         = "http://localhost:8080"
-	DefaultModel        = "qwen_qwen3.5-2b"
-	DefaultSystemPrompt = "You are a helpful assistant."
-)
-
 func Init() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".aicli")
-
-	if home, err := os.UserHomeDir(); err == nil {
-		viper.AddConfigPath(filepath.Join(home, ".config", "aicli-tool"))
+	if home, _ := os.UserHomeDir(); home != "" {
+		viper.AddConfigPath(filepath.Join(home, ".config", "aicli"))
 	}
 
-	viper.SetDefault("host", DefaultHost)
-	viper.SetDefault("model", DefaultModel)
-	viper.SetDefault("system_prompt", DefaultSystemPrompt)
-	viper.SetDefault("api_key", "")
+	viper.SetDefault("current_provider", "localai-1")
+	viper.SetDefault("providers.localai-1.type", "localai")
+	viper.SetDefault("providers.localai-1.host", "http://localhost:8080")
+	viper.SetDefault("providers.localai-1.default_model", "qwen_qwen3.5-2b")
 
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			fmt.Fprintf(os.Stderr, "Warning: failed to read config: %v\n", err)
-		}
-	}
+	viper.ReadInConfig() // ошибки игнорируем — используем дефолты
 }
 
-func Host() string         { return viper.GetString("host") }
-func Model() string        { return viper.GetString("model") }
-func SystemPrompt() string { return viper.GetString("system_prompt") }
-func APIKey() string       { return viper.GetString("api_key") }
+func CurrentProvider() string           { return viper.GetString("current_provider") }
+func ProviderType(name string) string   { return viper.GetString("providers." + name + ".type") }
+func ProviderHost(name string) string   { return viper.GetString("providers." + name + ".host") }
+func ProviderAPIKey(name string) string { return viper.GetString("providers." + name + ".api_key") }
+func ProviderDefaultModel(name string) string {
+	return viper.GetString("providers." + name + ".default_model")
+}
+func SystemPrompt() string                    { return viper.GetString("system_prompt") }
+func GetAllProviders() map[string]interface{} { return viper.GetStringMap("providers") }
