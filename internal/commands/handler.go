@@ -75,11 +75,14 @@ func Handle(s *State, input string) bool {
 		return true
 
 	case "/status":
+		ctxLen := config.ProviderContextLength(s.CurrentProvider)
+
 		fmt.Printf("%sСостояние:%s\n", ui.Cyan(""), ui.Reset())
 		fmt.Printf("  Провайдер   : %s%s%s\n", ui.Green(s.CurrentProvider), " ", ui.Reset())
 		fmt.Printf("  Модель      : %s%s%s\n", ui.Green(s.CurrentModel), " ", ui.Reset())
 		fmt.Printf("  Чат         : %s%s%s\n", ui.Green(s.CurrentChat), " ", ui.Reset())
 		fmt.Printf("  Сообщений   : %s%d%s\n", ui.Green(""), len(s.History), ui.Reset())
+		fmt.Printf("  Контекст    : %s%d токенов%s\n", ui.Green(""), ctxLen, ui.Reset())
 		return true
 
 	case "/model":
